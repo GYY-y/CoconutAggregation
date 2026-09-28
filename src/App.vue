@@ -64,8 +64,8 @@ const seedLinks = [
     id: 'github',
     menuId: 'dev',
     title: 'GitHub',
-    url: 'https://github.com/',
-    description: '代码仓库与 PR 汇总。',
+    url: 'https://github.com/GYY-y/CoconutAggregation.git',
+    description: '聚合工作台的 GitHub 代码仓库。',
     tags: ['开发', '代码', '资源'],
   },
   {
@@ -409,6 +409,7 @@ const themeVars = computed(() => {
     '--sidebar-muted': effectiveTheme.value === 'dark' ? '#a1a1a1' : '#6b6b6b',
     '--page-bg-image': usePageBackground.value ? `url("${state.settings.backgroundImage}")` : 'none',
     '--page-bg-blur': `${state.settings.backgroundBlur || 0}px`,
+    '--page-bg-scale': state.settings.backgroundBlur > 0 ? '1.03' : '1',
   }
 })
 

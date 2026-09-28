@@ -26,13 +26,14 @@ const handleBackgroundUpload = (event) => {
   reader.onload = () => {
     const image = new Image()
     image.onload = () => {
-      const maxSize = 1200
+      // 保留更高分辨率和更高 JPEG 质量，避免在 0 模糊度时仍显得发虚。
+      const maxSize = 2400
       const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight))
       const canvas = document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
       canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
       canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height)
-      props.settings.backgroundImage = canvas.toDataURL('image/jpeg', 0.58)
+      props.settings.backgroundImage = canvas.toDataURL('image/jpeg', 0.86)
       props.settings.backgroundMode = 'image'
     }
     image.src = reader.result
@@ -67,26 +68,26 @@ const resetContentBackground = () => {
       :wrapper-col="formLayout.wrapperCol"
       :label-align="formLayout.labelAlign"
     >
-      <a-form-item label="主题">
+      <a-form-item label="主题模式">
         <a-select :value="themeValue" @update:value="emit('update:themeValue', $event)">
           <a-select-option value="light">明亮</a-select-option>
           <a-select-option value="dark">暗色</a-select-option>
           <a-select-option value="system">跟随系统</a-select-option>
         </a-select>
       </a-form-item>
-      <a-form-item label="列数">
+      <a-form-item label="卡片列数">
         <a-slider v-model:value="settings.columns" :min="2" :max="5" />
       </a-form-item>
-      <a-form-item label="紧凑模式">
+      <a-form-item label="紧凑布局">
         <a-checkbox v-model:checked="settings.dense" />
       </a-form-item>
-      <a-form-item label="显示描述">
+      <a-form-item label="显示链接描述">
         <a-checkbox v-model:checked="settings.showDescription" />
       </a-form-item>
-      <a-form-item label="显示菜单数量">
+      <a-form-item label="显示链接数量">
         <a-checkbox v-model:checked="settings.showMenuCount" />
       </a-form-item>
-      <a-form-item label="配置">
+      <a-form-item label="数据管理">
         <a-space>
           <a-button size="middle" @click="emit('export')">导出配置</a-button>
           <a-button size="middle" @click="emit('import')">导入配置</a-button>
@@ -102,7 +103,7 @@ const resetContentBackground = () => {
           description="清理浏览器缓存前，请先导出配置。浏览器无法在网页未打开时通知本站，因此导出文件是最可靠的备份方式。"
         />
       </a-form-item>
-      <a-form-item label="背景样式" class="background-form-item">
+      <a-form-item class="background-form-item" :wrapper-col="{ span: 24 }">
         <a-tabs v-model:active-key="settings.backgroundMode" class="background-tabs">
           <a-tab-pane key="color" tab="内容背景色">
             <div class="color-setting">

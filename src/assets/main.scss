@@ -53,7 +53,7 @@ textarea {
   background-size: cover;
   background-repeat: no-repeat;
   filter: blur(var(--page-bg-blur));
-  transform: scale(1.03);
+  transform: scale(var(--page-bg-scale, 1));
 }
 
 .app-shell--sidebar-collapsed {

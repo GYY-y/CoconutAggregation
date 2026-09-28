@@ -18,6 +18,8 @@
 
 ## 技术栈
 
+项目仓库：[https://github.com/GYY-y/CoconutAggregation.git](https://github.com/GYY-y/CoconutAggregation.git)
+
 - Vue 3（`<script setup>`）
 - Vite
 - Ant Design Vue

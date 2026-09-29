@@ -5,6 +5,7 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  CopyOutlined,
   SettingOutlined,
   AppstoreOutlined,
   StarOutlined,
@@ -91,6 +92,7 @@ const seedSettings = {
   contentBackground: '#fcfcfc',
   backgroundMode: 'color',
   backgroundImage: '',
+  backgroundImages: [],
   backgroundBlur: 6,
 }
 
@@ -136,6 +138,7 @@ const newMenuBtnRef = ref(null)
 const newLinkBtnRef = ref(null)
 const settingBtnRef = ref(null)
 const dragSwitchRef = ref(null)
+const sidebarToggleBtnRef = ref(null)
 const tourOpen = ref(false)
 const sidebarCollapsed = ref(false)
 const sidebarLogoHovered = ref(false)
@@ -417,6 +420,11 @@ const brandLogo = computed(() => (effectiveTheme.value === 'dark' ? brandLogoDar
 
 const tourSteps = computed(() => [
   {
+    title: '侧边栏',
+    description: '点击这里可以展开或收起侧边栏，按需调整工作区空间。',
+    target: () => sidebarToggleBtnRef.value?.$el || sidebarToggleBtnRef.value,
+  },
+  {
     title: '新增菜单',
     description: '先创建一个菜单，方便归类链接。',
     target: () => newMenuBtnRef.value?.$el || newMenuBtnRef.value,
@@ -432,7 +440,7 @@ const tourSteps = computed(() => [
     target: () => newLinkBtnRef.value?.$el || newLinkBtnRef.value,
   },
   {
-    title: '配置项',
+    title: '设置',
     description: '调整列数、主题、导入导出等配置入口。',
     target: () => settingBtnRef.value?.$el || settingBtnRef.value,
   },
@@ -446,6 +454,7 @@ watch(
     } catch (error) {
       if (error?.name !== 'QuotaExceededError') throw error
       const { backgroundImage, ...settingsWithoutBackground } = val.settings || {}
+      delete settingsWithoutBackground.backgroundImages
       try {
         localStorage.setItem(storageKey, JSON.stringify({ ...val, settings: settingsWithoutBackground }))
       } catch (fallbackError) {
@@ -677,6 +686,30 @@ async function copyTitle(title) {
   }
 }
 
+async function copyCurrentQuote() {
+  const quote = motivationalQuotes[currentQuoteIndex.value]
+  if (!quote) return
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(quote)
+    } else {
+      const input = document.createElement('textarea')
+      input.value = quote
+      input.setAttribute('readonly', '')
+      input.style.position = 'absolute'
+      input.style.left = '-9999px'
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+    }
+    setToast('文案已复制')
+  } catch (err) {
+    console.error(err)
+    messageApi?.error?.('复制失败，请手动复制')
+  }
+}
+
 function exportConfig() {
   const payload = {
     menus: state.menus,
@@ -709,6 +742,7 @@ function handleImport(event) {
       state.menus = normalizeMenus(parsed.menus)
       state.links = parsed.links
       state.settings = { ...seedSettings, ...(parsed.settings || {}) }
+      normalizeBackgroundSettings(state.settings)
       if (state.settings.theme) {
         setTheme(['light', 'dark', 'system'].includes(state.settings.theme) ? state.settings.theme : 'system')
       }
@@ -763,6 +797,19 @@ function normalizeMenus(list) {
   }))
 }
 
+function normalizeBackgroundSettings(settings) {
+  const selected = settings.backgroundImage
+  const legacy = typeof settings.backgroundImage === 'string' && settings.backgroundImage ? [settings.backgroundImage] : []
+  const images = Array.isArray(settings.backgroundImages) ? settings.backgroundImages.filter(Boolean) : legacy
+  settings.backgroundImages = [...new Set(images)]
+  if (selected && !settings.backgroundImages.includes(selected)) {
+    settings.backgroundImages.unshift(selected)
+  }
+  settings.backgroundImage = selected && settings.backgroundImages.includes(selected) ? selected : (settings.backgroundImages[0] || '')
+  if (!settings.backgroundImage && settings.backgroundMode === 'image') settings.backgroundMode = 'color'
+  return settings
+}
+
 function moveItem(list, fromId, toId) {
   const fromIndex = list.findIndex((item) => item.id === fromId)
   const toIndex = list.findIndex((item) => item.id === toId)
@@ -812,6 +859,7 @@ function applySeedData() {
   state.menus = normalizeMenus([...seedMenus])
   state.links = [...seedLinks]
   state.settings = { ...seedSettings }
+  normalizeBackgroundSettings(state.settings)
   state.activeMenuId = homeMenuId
   state.search = ''
   setTheme(seedSettings.theme)
@@ -826,6 +874,7 @@ function loadInitialState() {
       const resolvedMenus = normalizeMenus(parsed.menus?.length ? parsed.menus : [...seedMenus])
       const resolvedLinks = (parsed.links?.length ? parsed.links : [...seedLinks]).filter((link) => link.menuId !== 'links')
       const resolvedSettings = { ...seedSettings, ...(parsed.settings || {}) }
+      normalizeBackgroundSettings(resolvedSettings)
       if (!parsed.settings?.backgroundMode && parsed.settings?.backgroundImage) {
         resolvedSettings.backgroundMode = 'image'
       }
@@ -879,6 +928,7 @@ function loadInitialState() {
           <img v-if="!sidebarCollapsed || !sidebarLogoHovered" class="brand__logo" :src="brandLogo" alt="Altr Logo" />
           <Button
             v-else
+            ref="sidebarToggleBtnRef"
             class="sidebar-toggle-btn sidebar-toggle-btn--expand"
             shape="circle"
             type="text"
@@ -889,6 +939,7 @@ function loadInitialState() {
           />
           <Button
             v-if="!sidebarCollapsed"
+            ref="sidebarToggleBtnRef"
             class="sidebar-toggle-btn"
             shape="circle"
             type="text"
@@ -946,7 +997,7 @@ function loadInitialState() {
               </Space>
             </Tooltip>
             <Button ref="newLinkBtnRef" type="primary" size="middle" @click="openNewLink" :icon="h(PlusOutlined)">新增链接</Button>
-            <Button ref="settingBtnRef" size="middle" @click="settingDrawerOpen = true" :icon="h(SettingOutlined)">配置项</Button>
+            <Button ref="settingBtnRef" size="middle" @click="settingDrawerOpen = true" :icon="h(SettingOutlined)">设置</Button>
           </Space>
         </header>
 
@@ -996,7 +1047,25 @@ function loadInitialState() {
           @copy-title="copyTitle"
         />
         <footer class="content-footer" aria-live="polite">
-          {{ motivationalQuotes[currentQuoteIndex] }}
+          <span
+            class="content-footer__text"
+            role="button"
+            tabindex="0"
+            title="点击复制当前文案"
+            @click="copyCurrentQuote"
+            @keydown.enter="copyCurrentQuote"
+            @keydown.space.prevent="copyCurrentQuote"
+          >{{ motivationalQuotes[currentQuoteIndex] }}</span>
+          <Tooltip title="复制当前文案">
+            <Button
+              class="content-footer__copy"
+              type="text"
+              size="small"
+              :icon="h(CopyOutlined)"
+              aria-label="复制当前文案"
+              @click="copyCurrentQuote"
+            />
+          </Tooltip>
         </footer>
         </template>
         <section v-else class="about-page" aria-label="关于本站">

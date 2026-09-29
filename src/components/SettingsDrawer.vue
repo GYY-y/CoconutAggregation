@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { ReloadOutlined } from '@ant-design/icons-vue'
+import { DeleteOutlined, ExportOutlined, ImportOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons-vue'
 
 const defaultContentBackground = '#fcfcfc'
 
@@ -33,7 +33,10 @@ const handleBackgroundUpload = (event) => {
       canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
       canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
       canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height)
-      props.settings.backgroundImage = canvas.toDataURL('image/jpeg', 0.86)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.86)
+      const images = Array.isArray(props.settings.backgroundImages) ? props.settings.backgroundImages : []
+      props.settings.backgroundImages = images.includes(dataUrl) ? images : [...images, dataUrl]
+      props.settings.backgroundImage = dataUrl
       props.settings.backgroundMode = 'image'
     }
     image.src = reader.result
@@ -44,7 +47,22 @@ const handleBackgroundUpload = (event) => {
 
 const clearBackground = () => {
   props.settings.backgroundImage = ''
+  props.settings.backgroundImages = []
   props.settings.backgroundMode = 'color'
+}
+
+const selectBackground = (image) => {
+  props.settings.backgroundImage = image
+  props.settings.backgroundMode = 'image'
+}
+
+const removeBackgroundImage = (image) => {
+  const images = (props.settings.backgroundImages || []).filter((item) => item !== image)
+  props.settings.backgroundImages = images
+  if (props.settings.backgroundImage === image) {
+    props.settings.backgroundImage = images[0] || ''
+  }
+  if (!props.settings.backgroundImage) props.settings.backgroundMode = 'color'
 }
 
 const resetContentBackground = () => {
@@ -55,7 +73,7 @@ const resetContentBackground = () => {
 <template>
   <a-drawer
     :open="open"
-    title="配置项"
+    title="设置"
     placement="right"
     :width="'40%'"
     :closable="true"
@@ -89,8 +107,8 @@ const resetContentBackground = () => {
       </a-form-item>
       <a-form-item label="数据管理">
         <a-space>
-          <a-button size="middle" @click="emit('export')">导出配置</a-button>
-          <a-button size="middle" @click="emit('import')">导入配置</a-button>
+          <a-button size="middle" @click="emit('export')"><ExportOutlined />导出配置</a-button>
+          <a-button size="middle" @click="emit('import')"><ImportOutlined />导入配置</a-button>
           <a-button size="middle" danger ghost @click="emit('clear')">清除缓存</a-button>
         </a-space>
       </a-form-item>
@@ -110,8 +128,9 @@ const resetContentBackground = () => {
               <input v-model="settings.contentBackground" type="color" aria-label="选择内容背景色" />
               <span>{{ settings.contentBackground }}</span>
               <a-tooltip title="恢复默认背景色">
-                <a-button type="text" size="small" aria-label="恢复默认背景色" @click="resetContentBackground">
+                <a-button class="reset-color-btn" size="small" aria-label="恢复默认背景色" @click="resetContentBackground">
                   <ReloadOutlined />
+                  <span>恢复默认</span>
                 </a-button>
               </a-tooltip>
             </div>
@@ -119,9 +138,23 @@ const resetContentBackground = () => {
           <a-tab-pane key="image" tab="页面背景图">
             <div class="background-setting">
               <input ref="backgroundInput" class="background-file-input" type="file" accept="image/*" aria-label="上传页面背景图" @change="handleBackgroundUpload" />
-              <a-button size="middle" @click="triggerBackgroundUpload">上传图片</a-button>
-              <a-button v-if="settings.backgroundImage" size="middle" @click="clearBackground">移除背景图</a-button>
-              <span v-else class="background-setting__hint">未设置</span>
+              <a-button size="middle" @click="triggerBackgroundUpload"><UploadOutlined />上传一张图片</a-button>
+              <a-button v-if="settings.backgroundImages?.length" size="middle" @click="clearBackground"><DeleteOutlined />清空图片</a-button>
+              <span v-else class="background-setting__hint">可上传多张，每次上传一张</span>
+            </div>
+            <div v-if="settings.backgroundImages?.length" class="background-gallery" aria-label="已上传的页面背景图">
+              <div
+                v-for="(image, index) in settings.backgroundImages"
+                :key="`${image.slice(-24)}-${index}`"
+                class="background-thumb"
+                :class="{ 'background-thumb--active': image === settings.backgroundImage }"
+              >
+                <button class="background-thumb__select" type="button" :aria-label="`使用第 ${index + 1} 张背景图`" @click="selectBackground(image)">
+                  <img :src="image" :alt="`背景图 ${index + 1}`" />
+                  <span v-if="image === settings.backgroundImage" class="background-thumb__badge">使用中</span>
+                </button>
+                <button class="background-thumb__remove" type="button" :aria-label="`删除第 ${index + 1} 张背景图`" @click="removeBackgroundImage(image)">×</button>
+              </div>
             </div>
             <div v-if="settings.backgroundImage" class="slider-setting">
               <span class="slider-setting__label">模糊度</span>
@@ -189,6 +222,14 @@ const resetContentBackground = () => {
   background: var(--surface-alt);
 }
 
+.reset-color-btn {
+  color: var(--muted);
+}
+
+.reset-color-btn :deep(.anticon) {
+  font-size: 12px;
+}
+
 .background-setting {
   display: flex;
   align-items: center;
@@ -208,6 +249,88 @@ const resetContentBackground = () => {
 .background-setting__hint {
   color: var(--muted);
   font-size: 12px;
+}
+
+.background-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.background-thumb {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-alt);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.background-thumb:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.background-thumb--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.background-thumb__select {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.background-thumb__select img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.background-thumb__badge {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.background-thumb__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-size: 16px;
+  line-height: 20px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 160ms ease, background-color 160ms ease;
+}
+
+.background-thumb:hover .background-thumb__remove,
+.background-thumb__remove:focus-visible {
+  opacity: 1;
+}
+
+.background-thumb__remove:hover {
+  background: #d9363e;
 }
 
 .slider-setting {

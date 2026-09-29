@@ -6,13 +6,13 @@
   background-color: var(--bg);
   --accent: #4f7afa;
   --accent-2: #6f8bff;
-  --bg: #0b1021;
-  --surface: #131b33;
-  --surface-alt: #0f162d;
-  --line: rgba(255, 255, 255, 0.08);
-  --muted: #9bb2d6;
-  --text: #dfe7ff;
-  --shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  --bg: #08090a;
+  --surface: #111315;
+  --surface-alt: #1a1d20;
+  --line: rgba(255, 255, 255, 0.12);
+  --muted: #9da3aa;
+  --text: #f1f3f5;
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.38);
 }
 
 * {
@@ -110,6 +110,10 @@ textarea {
   object-fit: contain;
   display: block;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+
+.brand__logo--clickable {
+  cursor: pointer;
 }
 
 .sidebar-toggle-btn--expand {
@@ -252,7 +256,7 @@ textarea {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   font-size: 12px;
-  color: #c8d9ff;
+  color: var(--text);
 }
 
 .content {
@@ -355,13 +359,22 @@ textarea {
   padding: 4px 8px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
-  color: #dfe7ff;
+  color: var(--text);
   font-size: 12px;
 }
 
 .card-grid {
   display: grid;
   gap: 16px;
+}
+
+.link-search-empty {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .card {
@@ -565,7 +578,7 @@ textarea {
 
 .modal__body {
   width: 480px;
-  background: #0f162d;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 18px;
@@ -591,7 +604,7 @@ textarea {
 .form label {
   display: grid;
   gap: 6px;
-  color: #cdd9ff;
+  color: var(--text);
 }
 
 .form input,
@@ -601,7 +614,7 @@ textarea {
   border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.04);
-  color: #dfe7ff;
+  color: var(--text);
 }
 
 .form textarea {
@@ -637,7 +650,7 @@ textarea {
   border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--surface);
-  color: #cdd9ff;
+  color: var(--text);
   font-size: 12px;
 }
 
@@ -779,7 +792,7 @@ textarea {
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid var(--line);
-  color: #dfe7ff;
+  color: var(--text);
   backdrop-filter: blur(6px);
 }
 

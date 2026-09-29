@@ -97,12 +97,12 @@ const baseLight = {
   text: '#1f2430',
 }
 const baseDark = {
-  background: '#0b1021',
-  surface: '#131b33',
-  surfaceAlt: '#0f162d',
-  line: 'rgba(255,255,255,0.08)',
-  muted: '#9bb2d6',
-  text: '#dfe7ff',
+  background: '#08090a',
+  surface: '#111315',
+  surfaceAlt: '#1a1d20',
+  line: 'rgba(255,255,255,0.12)',
+  muted: '#9da3aa',
+  text: '#f1f3f5',
 }
 
 const themePresets = {
@@ -440,10 +440,10 @@ const themeVars = computed(() => {
     '--text': preset.text,
     '--sidebar-bg': contentBackground.value,
     '--sidebar-bg-layer': usePageBackground.value ? 'transparent' : contentBackground.value,
-    '--sidebar-hover': effectiveTheme.value === 'dark' ? '#212121' : '#ececec',
-    '--sidebar-active': effectiveTheme.value === 'dark' ? '#2f2f2f' : '#e5e5e5',
-    '--sidebar-text': effectiveTheme.value === 'dark' ? '#ececec' : '#2f2f2f',
-    '--sidebar-muted': effectiveTheme.value === 'dark' ? '#a1a1a1' : '#6b6b6b',
+    '--sidebar-hover': effectiveTheme.value === 'dark' ? '#1d2023' : '#ececec',
+    '--sidebar-active': effectiveTheme.value === 'dark' ? '#272b2f' : '#e5e5e5',
+    '--sidebar-text': effectiveTheme.value === 'dark' ? '#e8ebee' : '#2f2f2f',
+    '--sidebar-muted': effectiveTheme.value === 'dark' ? '#a7adb4' : '#6b6b6b',
     '--page-bg-image': usePageBackground.value ? `url("${state.settings.backgroundImage}")` : 'none',
     '--page-bg-blur': `${state.settings.backgroundBlur || 0}px`,
     '--page-bg-scale': state.settings.backgroundBlur > 0 ? '1.03' : '1',
@@ -518,7 +518,6 @@ watch(
 onMounted(() => {
   loadInitialState()
   sidebarCollapsed.value = localStorage.getItem(sidebarStorageKey) === 'true'
-  window.addEventListener('beforeunload', warnBeforeBrowserDataClear)
   quoteTimer = window.setInterval(() => {
     currentQuoteIndex.value = (currentQuoteIndex.value + 1) % motivationalQuotes.length
   }, 8000)
@@ -526,7 +525,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.clearInterval(quoteTimer)
-  window.removeEventListener('beforeunload', warnBeforeBrowserDataClear)
 })
 
 watch(sidebarCollapsed, (collapsed) => {
@@ -540,6 +538,10 @@ function toggleSidebar() {
 function expandSidebar() {
   sidebarCollapsed.value = false
   sidebarLogoHovered.value = false
+}
+
+function goHome() {
+  state.activeMenuId = homeMenuId
 }
 
 function resetLinkForm(menuId = state.activeMenuId) {
@@ -806,14 +808,6 @@ function clearCache() {
   })
 }
 
-function warnBeforeBrowserDataClear(event) {
-  if (!state.menus.length && !state.links.length) return undefined
-  const warning = '当前工作台数据保存在浏览器本地。若要清理浏览器缓存，请先导出配置，否则数据可能丢失。'
-  event.preventDefault()
-  event.returnValue = warning
-  return warning
-}
-
 function setToast(message, type = 'success') {
   const handler = messageApi?.[type] || messageApi?.success
   handler?.(message)
@@ -959,7 +953,15 @@ function loadInitialState() {
           @mouseenter="sidebarCollapsed && (sidebarLogoHovered = true)"
           @mouseleave="sidebarLogoHovered = false"
         >
-          <img v-if="!sidebarCollapsed || !sidebarLogoHovered" class="brand__logo" :src="brandLogo" alt="Altr Logo" />
+          <img
+            v-if="!sidebarCollapsed || !sidebarLogoHovered"
+            class="brand__logo"
+            :class="{ 'brand__logo--clickable': !sidebarCollapsed }"
+            :src="brandLogo"
+            alt="Altr Logo"
+            title="返回首页"
+            @click="!sidebarCollapsed && goHome()"
+          />
           <Button
             v-else
             ref="sidebarToggleBtnRef"
@@ -1064,7 +1066,13 @@ function loadInitialState() {
         </div>
         </div>
 
+        <a-empty
+          v-if="!filteredLinks.length"
+          class="link-search-empty"
+          :description="state.search.trim() ? '没有找到相关链接' : '暂无链接'"
+        />
         <LinkGrid
+          v-else
           :links="filteredLinks"
           :can-drag="canDrag"
           :dense="state.settings.dense"

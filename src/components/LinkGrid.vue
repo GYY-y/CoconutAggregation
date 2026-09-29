@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { StarFilled, StarOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps({
   links: { type: Array, default: () => [] },
@@ -10,7 +11,7 @@ const props = defineProps({
   activeTag: { type: String, default: '' },
 })
 
-const emit = defineEmits(['open', 'edit', 'delete', 'drag-start', 'drag-end', 'drop', 'copy-title'])
+const emit = defineEmits(['open', 'edit', 'delete', 'favorite', 'drag-start', 'drag-end', 'drop', 'copy-title'])
 
 const denseClass = computed(() => (props.dense ? 'card--dense' : ''))
 
@@ -62,9 +63,23 @@ const getCardStyle = (link) => {
       >
         <div class="card__row">
           <div class="card__content">
-            <p class="card__title card__title--truncate" @click.stop="emit('copy-title', link.title)">
-              {{ link.title }}
-            </p>
+            <div class="card__title-row">
+              <p class="card__title card__title--truncate" @click.stop="emit('copy-title', link.title)">
+                {{ link.title }}
+              </p>
+              <a-tooltip :title="link.favorite ? '取消置顶' : '置顶链接'">
+                <button
+                  type="button"
+                  class="card__favorite"
+                  :class="{ 'card__favorite--active': link.favorite }"
+                  :aria-label="link.favorite ? `取消置顶 ${link.title}` : `置顶 ${link.title}`"
+                  @click.stop="emit('favorite', link.id)"
+                >
+                  <StarFilled v-if="link.favorite" />
+                  <StarOutlined v-else />
+                </button>
+              </a-tooltip>
+            </div>
             <a-tooltip v-if="showDescription && link.description" :title="link.description">
               <p class="card__desc card__desc--truncate">{{ link.description }}</p>
             </a-tooltip>

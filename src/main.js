@@ -5,3 +5,7 @@ import ThemeProvider from './components/ThemeProvider.vue'
 import './assets/main.scss'
 
 createApp(ThemeProvider).use(Antd).mount('#app')
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}))
+}

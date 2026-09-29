@@ -34,6 +34,7 @@ import MenuFormModal from './components/MenuFormModal.vue'
 import SettingsDrawer from './components/SettingsDrawer.vue'
 import brandLogoLight from './assets/images/altr.svg'
 import brandLogoDark from './assets/images/white_altr.svg'
+import { CONFIG_VERSION, normalizeImportedConfig } from './utils/config'
 
 const storageKey = 'aggregation-platform-state'
 
@@ -118,6 +119,8 @@ const state = reactive({
   activeMenuId: '',
   search: '',
 })
+
+const searchInputRef = ref(null)
 
 const linkModalOpen = ref(false)
 const menuModalOpen = ref(false)
@@ -351,6 +354,7 @@ const filteredLinks = computed(() => {
         link.tags.some((t) => t.toLowerCase().includes(keyword))
       )
     })
+    .sort((a, b) => Number(b.favorite) - Number(a.favorite))
 })
 
 const availableTags = computed(() => {
@@ -487,15 +491,15 @@ watch(
   () => ({ menus: state.menus, links: state.links, settings: state.settings, activeMenuId: state.activeMenuId }),
   (val) => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(val))
+      localStorage.setItem(storageKey, JSON.stringify({ ...val, version: CONFIG_VERSION }))
     } catch (error) {
-      if (error?.name !== 'QuotaExceededError') throw error
       const { backgroundImage, ...settingsWithoutBackground } = val.settings || {}
       delete settingsWithoutBackground.backgroundImages
       try {
-        localStorage.setItem(storageKey, JSON.stringify({ ...val, settings: settingsWithoutBackground }))
+        localStorage.setItem(storageKey, JSON.stringify({ ...val, version: CONFIG_VERSION, settings: settingsWithoutBackground }))
       } catch (fallbackError) {
         console.warn('配置空间不足，已跳过本次本地保存', fallbackError)
+        setToast('本地保存失败，请立即导出配置备份', 'error')
       }
     }
   },
@@ -521,6 +525,7 @@ watch(
 onMounted(() => {
   loadInitialState()
   sidebarCollapsed.value = localStorage.getItem(sidebarStorageKey) === 'true'
+  window.addEventListener('keydown', handleGlobalShortcut)
   quoteTimer = window.setInterval(() => {
     currentQuoteIndex.value = (currentQuoteIndex.value + 1) % motivationalQuotes.length
   }, 8000)
@@ -528,6 +533,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.clearInterval(quoteTimer)
+  window.removeEventListener('keydown', handleGlobalShortcut)
 })
 
 watch(sidebarCollapsed, (collapsed) => {
@@ -601,6 +607,7 @@ function submitLink() {
         description: linkForm.description.trim(),
         tags,
         menuId: linkForm.menuId,
+        favorite: target.favorite === true,
       })
     }
   } else {
@@ -611,6 +618,7 @@ function submitLink() {
       description: linkForm.description.trim(),
       tags,
       menuId: linkForm.menuId,
+      favorite: false,
     })
   }
   linkModalOpen.value = false
@@ -621,6 +629,13 @@ function submitLink() {
 
 function deleteLink(id) {
   state.links = state.links.filter((l) => l.id !== id)
+}
+
+function toggleFavorite(id) {
+  const target = state.links.find((link) => link.id === id)
+  if (!target) return
+  target.favorite = !target.favorite
+  setToast(target.favorite ? '已置顶链接' : '已取消置顶')
 }
 
 function openNewMenu() {
@@ -690,20 +705,47 @@ function startLinkDrag(id) {
 
 function dropLink(targetId) {
   if (!canDrag.value) return
-  if (!draggingLinkId.value || draggingLinkId.value === targetId) return
+  if (!draggingLinkId.value || draggingLinkId.value === targetId) {
+    draggingLinkId.value = null
+    return
+  }
   const from = state.links.find((l) => l.id === draggingLinkId.value)
   const to = state.links.find((l) => l.id === targetId)
-  if (!from || !to || from.menuId !== to.menuId) return
+  if (!from || !to || from.menuId !== to.menuId || Boolean(from.favorite) !== Boolean(to.favorite)) {
+    draggingLinkId.value = null
+    return
+  }
   const menuId = from.menuId
-  const sameMenuLinks = state.links.filter((l) => l.menuId === menuId)
-  const reordered = moveItem(sameMenuLinks, draggingLinkId.value, targetId)
-  const others = state.links.filter((l) => l.menuId !== menuId)
-  state.links = [...others, ...reordered]
+  const favorite = Boolean(from.favorite)
+  const sameGroupLinks = state.links.filter((l) => l.menuId === menuId && Boolean(l.favorite) === favorite)
+  const reordered = moveItem(sameGroupLinks, draggingLinkId.value, targetId)
+  let groupIndex = 0
+  state.links = state.links.map((link) => {
+    if (link.menuId === menuId && Boolean(link.favorite) === favorite) return reordered[groupIndex++]
+    return link
+  })
   draggingLinkId.value = null
 }
 
 function openLink(url) {
   window.open(url, '_blank', 'noopener')
+}
+
+function handleGlobalShortcut(event) {
+  const target = event.target
+  const isTyping = target instanceof HTMLElement && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable)
+  if (event.key === 'Escape') {
+    tourOpen.value = false
+    return
+  }
+  if (isTyping) return
+  if (event.key === '/' || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
+    event.preventDefault()
+    searchInputRef.value?.focus?.()
+  } else if (event.key.toLowerCase() === 'n') {
+    event.preventDefault()
+    openNewLink()
+  }
 }
 
 function toggleTagFilter(tag) {
@@ -764,6 +806,7 @@ async function copyCurrentQuote() {
 
 function exportConfig() {
   const payload = {
+    version: CONFIG_VERSION,
     menus: state.menus,
     links: state.links,
     settings: {
@@ -793,16 +836,16 @@ function handleImport(event) {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result)
-      if (!Array.isArray(parsed.menus) || !Array.isArray(parsed.links)) throw new Error('格式不正确')
-      state.menus = normalizeMenus(parsed.menus)
-      state.links = parsed.links
-      state.settings = { ...seedSettings, ...(parsed.settings || {}) }
+      const normalized = normalizeImportedConfig(JSON.parse(reader.result), seedSettings)
+      state.menus = normalizeMenus(normalized.menus)
+      state.links = normalized.links
+      state.settings = normalized.settings
       normalizeBackgroundSettings(state.settings)
       if (state.settings.theme) {
         setTheme(['light', 'dark', 'system'].includes(state.settings.theme) ? state.settings.theme : 'system')
       }
-      state.activeMenuId = parsed.activeMenuId || parsed.menus?.[0]?.id || ''
-      setToast('已导入配置')
+      state.activeMenuId = normalized.activeMenuId
+      setToast(`已导入配置（${normalized.links.length} 条链接）`)
     } catch (err) {
       console.error(err)
       setToast('导入失败：请检查 JSON', 'error')
@@ -918,9 +961,18 @@ function loadInitialState() {
     const cache = localStorage.getItem(storageKey)
     if (cache) {
       const parsed = JSON.parse(cache)
-      const resolvedMenus = normalizeMenus(parsed.menus?.length ? parsed.menus : [...seedMenus])
-      const resolvedLinks = (parsed.links?.length ? parsed.links : [...seedLinks]).filter((link) => link.menuId !== 'links')
-      const resolvedSettings = { ...seedSettings, ...(parsed.settings || {}) }
+      const normalized = normalizeImportedConfig(
+        {
+          menus: parsed.menus?.length ? parsed.menus : [...seedMenus],
+          links: parsed.links?.length ? parsed.links : [...seedLinks],
+          settings: parsed.settings,
+          activeMenuId: parsed.activeMenuId,
+        },
+        seedSettings,
+      )
+      const resolvedMenus = normalizeMenus(normalized.menus)
+      const resolvedLinks = normalized.links
+      const resolvedSettings = normalized.settings
       normalizeBackgroundSettings(resolvedSettings)
       if (!parsed.settings?.backgroundMode && parsed.settings?.backgroundImage) {
         resolvedSettings.backgroundMode = 'image'
@@ -929,7 +981,7 @@ function loadInitialState() {
         ? resolvedSettings.theme
         : 'system'
       setTheme(validTheme)
-      const requestedActiveMenuId = parsed.activeMenuId || parsed.menus?.[0]?.id || homeMenuId
+      const requestedActiveMenuId = normalized.activeMenuId || homeMenuId
       const resolvedActiveMenuId = resolvedMenus.some((menu) => menu.id === requestedActiveMenuId)
         ? requestedActiveMenuId
         : homeMenuId
@@ -1005,27 +1057,29 @@ function loadInitialState() {
           />
         </div>
         <input ref="importInput" type="file" accept="application/json" class="hidden" @change="handleImport" />
-        <MenuList
-          :menus="state.menus"
-          :active-menu-id="state.activeMenuId"
-          :show-menu-count="state.settings.showMenuCount"
-          :menu-link-count="menuLinkCount"
-          :can-drag="canDrag"
-          :accent="state.settings.accent"
-          :icon-map="menuIconMap"
-          :edit-icon="h(EditOutlined)"
-          :delete-icon="h(DeleteOutlined)"
-          :disable-edit-ids="[]"
-          :collapsed="sidebarCollapsed"
-          :home-id="homeMenuId"
-          :about-id="aboutMenuId"
-          @select="state.activeMenuId = $event"
-          @edit="openEditMenu"
-          @delete="deleteMenu"
-          @drag-start="startMenuDrag"
-          @drag-end="draggingMenuId = null"
-          @drop="dropMenu"
-        />
+        <div class="sidebar__menu-scroll">
+          <MenuList
+            :menus="state.menus"
+            :active-menu-id="state.activeMenuId"
+            :show-menu-count="state.settings.showMenuCount"
+            :menu-link-count="menuLinkCount"
+            :can-drag="canDrag"
+            :accent="state.settings.accent"
+            :icon-map="menuIconMap"
+            :edit-icon="h(EditOutlined)"
+            :delete-icon="h(DeleteOutlined)"
+            :disable-edit-ids="[]"
+            :collapsed="sidebarCollapsed"
+            :home-id="homeMenuId"
+            :about-id="aboutMenuId"
+            @select="state.activeMenuId = $event"
+            @edit="openEditMenu"
+            @delete="deleteMenu"
+            @drag-start="startMenuDrag"
+            @drag-end="draggingMenuId = null"
+            @drop="dropMenu"
+          />
+        </div>
         <div class="sidebar__actions">
           <Button
             ref="newMenuBtnRef"
@@ -1085,12 +1139,13 @@ function loadInitialState() {
         <template v-if="!isAboutPage">
         <div class="toolbar">
           <Input
+            ref="searchInputRef"
             v-model:value="state.search"
             allow-clear
             size="middle"
             class="search-input"
-            style="width: 240px"
-            placeholder="搜索标题、标签"
+            style="width: 300px"
+            placeholder="搜索标题、标签（/ 或 ⌘K 聚焦）"
           >
             <template #prefix>
               <SearchOutlined />
@@ -1126,6 +1181,7 @@ function loadInitialState() {
           :get-tag-style="getTagStyle"
           :active-tag="activeTag"
           @open="openLink"
+          @favorite="toggleFavorite"
           @edit="openEditLink"
           @delete="deleteLink"
           @drag-start="startLinkDrag"
@@ -1154,6 +1210,14 @@ function loadInitialState() {
           <p>通过菜单对链接进行分组，使用标签和关键词快速筛选内容；也可以新增、编辑、删除链接和菜单，并按照自己的习惯调整顺序。</p>
           <p>工作台支持拖拽排序、主题切换、卡片列数、紧凑模式和描述显示等设置，适配不同的使用习惯和信息密度。</p>
           <p>菜单、链接和界面设置会保存在当前浏览器的本地存储中，也支持导入和导出配置，方便备份或迁移到其他环境。</p>
+
+          <h3>设为浏览器首页</h3>
+          <p>如果你觉得这个工作台好用，可以把它设为浏览器首页，每次打开浏览器就能快速访问常用链接。</p>
+          <p><strong>Google Chrome：</strong>打开右上角「⋮」菜单，进入「设置」→「起始页面」→选择「打开特定网页或一组网页」→点击「添加新网页」→输入或粘贴当前网站地址→点击「添加」。</p>
+          <p><strong>Microsoft Edge：</strong>打开右上角「⋯」菜单，进入「设置」→「启动、主页和新建选项卡页」→选择「打开自定义网站」→添加或粘贴当前网站地址。</p>
+
+          <h3>快捷键</h3>
+          <p>按 <kbd>/</kbd> 或 <kbd>Ctrl/Cmd + K</kbd> 快速聚焦搜索框；按 <kbd>N</kbd> 新增链接；按 <kbd>Esc</kbd> 关闭引导提示。</p>
 
           <h3>隐私说明</h3>
           <p>本站本身不需要账号，应用数据默认保存在当前浏览器本地，不会主动上传到应用服务器。打开链接后，目标网站可能会按照其自身的隐私政策处理访问数据。</p>

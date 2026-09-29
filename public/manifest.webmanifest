@@ -1,0 +1,13 @@
+{
+  "name": "聚合工作台",
+  "short_name": "聚合工作台",
+  "description": "轻量的个人链接聚合工作台",
+  "lang": "zh-CN",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#08090a",
+  "theme_color": "#08090a",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

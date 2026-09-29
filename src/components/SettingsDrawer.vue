@@ -83,6 +83,12 @@ const removeBackgroundImage = (image) => {
 const resetContentBackground = () => {
   props.settings.contentBackground = defaultContentBackground
 }
+
+const setCardLayout = (layout) => {
+  const isSimple = layout === 'simple'
+  props.settings.dense = isSimple
+  props.settings.showDescription = !isSimple
+}
 </script>
 
 <template>
@@ -104,7 +110,7 @@ const resetContentBackground = () => {
       <a-form-item label="主题模式">
         <a-select :value="themeValue" @update:value="emit('update:themeValue', $event)">
           <a-select-option value="light">明亮</a-select-option>
-          <a-select-option value="dark">暗色</a-select-option>
+          <a-select-option value="dark">墨夜</a-select-option>
           <a-select-option value="system">跟随系统</a-select-option>
         </a-select>
       </a-form-item>
@@ -112,11 +118,21 @@ const resetContentBackground = () => {
         <a-slider v-model:value="settings.columns" :min="2" :max="6" />
       </a-form-item>
       <a-form-item label="显示选项" class="display-options-item">
-        <div class="display-options-grid">
-          <a-checkbox v-model:checked="settings.dense">紧凑布局</a-checkbox>
-          <a-checkbox v-model:checked="settings.rainbowCards">彩虹卡片</a-checkbox>
-          <a-checkbox v-model:checked="settings.showDescription">显示链接描述</a-checkbox>
-          <a-checkbox v-model:checked="settings.showMenuCount">显示链接数量</a-checkbox>
+        <div class="display-options-list">
+          <div class="display-option-row display-option-row--layout">
+            <a-radio-group size="small" :value="settings.dense || !settings.showDescription ? 'simple' : 'detail'" button-style="solid" @change="setCardLayout($event.target.value)">
+              <a-radio-button value="simple">简约</a-radio-button>
+              <a-radio-button value="detail">详情</a-radio-button>
+            </a-radio-group>
+          </div>
+          <label class="display-option-row">
+            <span class="display-option-row__label">彩虹卡片</span>
+            <a-checkbox v-model:checked="settings.rainbowCards" />
+          </label>
+          <label class="display-option-row">
+            <span class="display-option-row__label">显示链接数量</span>
+            <a-checkbox v-model:checked="settings.showMenuCount" />
+          </label>
         </div>
       </a-form-item>
       <a-form-item label="数据管理">
@@ -243,16 +259,31 @@ const resetContentBackground = () => {
   width: 100%;
 }
 
-.display-options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 18px;
+.display-options-list {
   width: 100%;
 }
 
+.display-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 42px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.display-option-row:last-child {
+  border-bottom: 0;
+}
+
+.display-option-row__label {
+  color: var(--text);
+  font-size: 13px;
+}
+
 @media (max-width: 640px) {
-  .display-options-grid {
-    grid-template-columns: 1fr;
+  .display-option-row {
+    min-height: 40px;
   }
 }
 

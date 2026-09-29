@@ -109,7 +109,7 @@ const resetContentBackground = () => {
         </a-select>
       </a-form-item>
       <a-form-item label="卡片列数">
-        <a-slider v-model:value="settings.columns" :min="2" :max="5" />
+        <a-slider v-model:value="settings.columns" :min="2" :max="6" />
       </a-form-item>
       <a-form-item label="紧凑布局">
         <a-checkbox v-model:checked="settings.dense" />

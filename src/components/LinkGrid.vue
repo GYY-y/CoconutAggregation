@@ -75,16 +75,7 @@ const getCardStyle = (link) => {
         <a-menu>
           <a-menu-item @click="emit('open', link.url)">打开</a-menu-item>
           <a-menu-item @click="emit('edit', link)">编辑</a-menu-item>
-          <a-menu-item class="menu-item--danger">
-            <a-popconfirm
-              title="确认删除此链接？"
-              ok-text="删除"
-              cancel-text="取消"
-              @confirm="emit('delete', link.id)"
-            >
-              <span>删除</span>
-            </a-popconfirm>
-          </a-menu-item>
+          <a-menu-item class="menu-item--danger" @click="emit('delete', link.id)">删除</a-menu-item>
         </a-menu>
       </template>
     </a-dropdown>

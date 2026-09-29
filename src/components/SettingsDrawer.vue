@@ -142,6 +142,11 @@ const resetContentBackground = () => {
               <a-button v-if="settings.backgroundImages?.length" size="middle" @click="clearBackground"><DeleteOutlined />清空图片</a-button>
               <span v-else class="background-setting__hint">可上传多张，每次上传一张</span>
             </div>
+            <div v-if="settings.backgroundImage" class="slider-setting">
+              <span class="slider-setting__label">模糊度</span>
+              <a-slider v-model:value="settings.backgroundBlur" :min="0" :max="20" :step="1" />
+              <span>{{ settings.backgroundBlur }}</span>
+            </div>
             <div v-if="settings.backgroundImages?.length" class="background-gallery" aria-label="已上传的页面背景图">
               <div
                 v-for="(image, index) in settings.backgroundImages"
@@ -155,11 +160,6 @@ const resetContentBackground = () => {
                 </button>
                 <button class="background-thumb__remove" type="button" :aria-label="`删除第 ${index + 1} 张背景图`" @click="removeBackgroundImage(image)">×</button>
               </div>
-            </div>
-            <div v-if="settings.backgroundImage" class="slider-setting">
-              <span class="slider-setting__label">模糊度</span>
-              <a-slider v-model:value="settings.backgroundBlur" :min="0" :max="20" :step="1" />
-              <span>{{ settings.backgroundBlur }}</span>
             </div>
           </a-tab-pane>
         </a-tabs>
@@ -256,6 +256,10 @@ const resetContentBackground = () => {
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
   gap: 10px;
   margin-top: 14px;
+  max-height: 240px;
+  padding: 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .background-thumb {

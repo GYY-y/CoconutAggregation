@@ -111,14 +111,13 @@ const resetContentBackground = () => {
       <a-form-item label="卡片列数">
         <a-slider v-model:value="settings.columns" :min="2" :max="6" />
       </a-form-item>
-      <a-form-item label="紧凑布局">
-        <a-checkbox v-model:checked="settings.dense" />
-      </a-form-item>
-      <a-form-item label="显示链接描述">
-        <a-checkbox v-model:checked="settings.showDescription" />
-      </a-form-item>
-      <a-form-item label="显示链接数量">
-        <a-checkbox v-model:checked="settings.showMenuCount" />
+      <a-form-item label="显示选项" class="display-options-item">
+        <div class="display-options-grid">
+          <a-checkbox v-model:checked="settings.dense">紧凑布局</a-checkbox>
+          <a-checkbox v-model:checked="settings.rainbowCards">彩虹卡片</a-checkbox>
+          <a-checkbox v-model:checked="settings.showDescription">显示链接描述</a-checkbox>
+          <a-checkbox v-model:checked="settings.showMenuCount">显示链接数量</a-checkbox>
+        </div>
       </a-form-item>
       <a-form-item label="数据管理">
         <a-space>
@@ -226,6 +225,23 @@ const resetContentBackground = () => {
 
 .storage-warning-item {
   margin-top: -8px;
+}
+
+.display-options-item :deep(.ant-form-item-control-input-content) {
+  width: 100%;
+}
+
+.display-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .display-options-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .background-form-item :deep(.ant-form-item-control) {

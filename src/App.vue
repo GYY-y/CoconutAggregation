@@ -61,14 +61,6 @@ const seedLinks = [
     tags: ['工具', '项目', '协作'],
   },
   {
-    id: 'github',
-    menuId: 'dev',
-    title: 'GitHub',
-    url: 'https://github.com/GYY-y/CoconutAggregation.git',
-    description: '聚合工作台的 GitHub 代码仓库。',
-    tags: ['开发', '代码', '资源'],
-  },
-  {
     id: 'figma',
     menuId: 'ref',
     title: 'Figma 设计稿',
@@ -84,6 +76,7 @@ const seedSettings = {
   columns: 4,
   showDescription: true,
   dense: false,
+  rainbowCards: false,
   accent: '#4F7AFA',
   theme: 'system',
   showMenuCount: false,
@@ -958,7 +951,7 @@ function loadInitialState() {
 </script>
 
 <template>
-  <div class="app-shell" :class="{ 'app-shell--sidebar-collapsed': sidebarCollapsed }" :style="themeVars">
+  <div class="app-shell" :class="{ 'app-shell--sidebar-collapsed': sidebarCollapsed, 'app-shell--rainbow-cards': state.settings.rainbowCards }" :style="themeVars">
       <aside class="sidebar sidebar--compact" :class="{ 'sidebar--collapsed': sidebarCollapsed }">
         <div
           class="brand"

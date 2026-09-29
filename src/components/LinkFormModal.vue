@@ -156,24 +156,64 @@ defineExpose({ validate: () => linkFormRef.value?.validate() })
         />
       </a-form-item>
       <a-form-item label="快捷识别">
-        <a-input
-          v-if="!quickPasteFocused"
-          v-model:value="quickPasteText"
-          placeholder="粘贴文本，智能识别链接信息"
-          @focus="focusQuickPaste"
-        />
-        <a-textarea
-          v-else
-          ref="quickPasteInputRef"
-          v-model:value="quickPasteText"
-          rows="2"
-          placeholder="粘贴文本，智能识别链接信息"
-          :maxlength="100"
-          show-count
-          @paste="handleQuickPaste"
-          @blur="handleQuickPasteBlur"
-        />
+        <div class="quick-paste-field">
+          <a-input
+            v-if="!quickPasteFocused"
+            v-model:value="quickPasteText"
+            placeholder="粘贴文本，智能识别链接信息"
+            @focus="focusQuickPaste"
+          />
+          <a-textarea
+            v-else
+            ref="quickPasteInputRef"
+            v-model:value="quickPasteText"
+            rows="2"
+            placeholder="粘贴文本，智能识别链接信息"
+            :maxlength="100"
+            show-count
+            @paste="handleQuickPaste"
+            @blur="handleQuickPasteBlur"
+          />
+          <a-button
+            v-if="quickPasteFocused"
+            class="quick-paste-field__action"
+            type="link"
+            size="small"
+            :disabled="!quickPasteText.trim()"
+            @mousedown.prevent
+            @click="recognizeQuickPaste(quickPasteText)"
+          >识别</a-button>
+        </div>
       </a-form-item>
     </a-form>
   </a-modal>
 </template>
+
+<style scoped>
+.quick-paste-field__action {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 1;
+  height: 24px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--surface-alt);
+  color: var(--accent);
+  line-height: 20px;
+}
+
+.quick-paste-field__action:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.quick-paste-field {
+  position: relative;
+}
+
+.quick-paste-field :deep(textarea) {
+  padding-right: 82px;
+  padding-bottom: 28px;
+}
+</style>

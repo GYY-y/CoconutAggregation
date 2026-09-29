@@ -131,9 +131,13 @@ const resetContentBackground = () => {
           class="storage-warning"
           type="warning"
           show-icon
-          message="数据保存在当前浏览器"
-          description="清理浏览器缓存前，请先导出配置。浏览器无法在网页未打开时通知本站，因此导出文件是最可靠的备份方式。"
-        />
+        >
+          <template #message>
+            <a-tooltip title="清理浏览器缓存前，请先导出配置。浏览器无法在网页未打开时通知本站，因此导出文件是最可靠的备份方式。">
+              <span class="storage-warning__message">数据保存在当前浏览器</span>
+            </a-tooltip>
+          </template>
+        </a-alert>
       </a-form-item>
       <a-form-item class="background-form-item" :wrapper-col="{ span: 24 }">
         <a-tabs v-model:active-key="settings.backgroundMode" class="background-tabs">
@@ -221,6 +225,14 @@ const resetContentBackground = () => {
 
 .storage-warning {
   margin-bottom: 0;
+}
+
+.storage-warning :deep(.ant-alert-message) {
+  line-height: 20px;
+}
+
+.storage-warning__message {
+  cursor: help;
 }
 
 .storage-warning-item {

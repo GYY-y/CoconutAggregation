@@ -73,6 +73,7 @@ const seedLinks = [
 const seedTags = Array.from(new Set(seedLinks.flatMap((link) => link.tags)))
 
 const seedSettings = {
+  appTitle: '链接聚合',
   columns: 4,
   showDescription: true,
   dense: false,
@@ -134,6 +135,8 @@ const sidebarToggleBtnRef = ref(null)
 const tourOpen = ref(false)
 const sidebarCollapsed = ref(false)
 const sidebarLogoHovered = ref(false)
+const editingAppTitle = ref(false)
+const appTitleDraft = ref('')
 const sidebarStorageKey = 'aggregation-platform-sidebar-collapsed'
 const aboutMenuId = '__about__'
 const motivationalQuotes = [
@@ -540,6 +543,19 @@ function expandSidebar() {
   sidebarLogoHovered.value = false
 }
 
+function startEditingAppTitle() {
+  appTitleDraft.value = state.settings.appTitle || '链接聚合'
+  editingAppTitle.value = true
+}
+
+function saveAppTitle() {
+  if (!editingAppTitle.value) return
+  const title = appTitleDraft.value.trim()
+  state.settings.appTitle = title || '链接聚合'
+  editingAppTitle.value = false
+  setToast('标题已保存')
+}
+
 function goHome() {
   state.activeMenuId = homeMenuId
 }
@@ -750,7 +766,10 @@ function exportConfig() {
   const payload = {
     menus: state.menus,
     links: state.links,
-    settings: state.settings,
+    settings: {
+      ...state.settings,
+      appTitle: state.settings.appTitle || '链接聚合',
+    },
     activeMenuId: state.activeMenuId,
   }
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -1023,7 +1042,33 @@ function loadInitialState() {
       <main class="content">
         <header class="header">
           <div>
-            <h1>{{ isAboutPage ? '关于本站' : '链接聚合' }}</h1>
+            <div v-if="isAboutPage" class="page-title">
+              <h1>关于本站</h1>
+            </div>
+            <div v-else class="page-title page-title--editable">
+              <Input
+                v-if="editingAppTitle"
+                v-model:value="appTitleDraft"
+                class="page-title__input"
+                size="large"
+                maxlength="30"
+                show-count
+                autofocus
+                @keyup.enter="saveAppTitle"
+                @blur="saveAppTitle"
+              />
+              <h1 v-else>{{ state.settings.appTitle || '链接聚合' }}</h1>
+              <Button
+                v-if="!editingAppTitle"
+                class="page-title__edit"
+                type="text"
+                size="small"
+                :icon="h(EditOutlined)"
+                aria-label="编辑标题"
+                title="编辑标题"
+                @click="startEditingAppTitle"
+              />
+            </div>
           </div>
           <Space v-if="!isAboutPage" class="header__actions" wrap>
             <Tooltip title="开启后支持左侧菜单和右侧内容拖拽排序">

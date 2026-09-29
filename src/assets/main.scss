@@ -274,6 +274,36 @@ textarea {
   gap: 24px;
 }
 
+.page-title {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.page-title h1 {
+  margin: 0;
+}
+
+.page-title--editable .page-title__edit {
+  opacity: 0;
+  margin-left: 4px;
+  color: var(--muted);
+  transition: opacity 160ms ease, color 160ms ease;
+}
+
+.page-title--editable:hover .page-title__edit,
+.page-title--editable .page-title__edit:focus-visible {
+  opacity: 1;
+}
+
+.page-title--editable .page-title__edit:hover {
+  color: var(--text);
+}
+
+.page-title__input {
+  width: min(360px, 50vw);
+}
+
 .header h1 {
   margin: 0;
   font-size: 28px;

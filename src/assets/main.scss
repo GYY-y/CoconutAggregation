@@ -147,22 +147,6 @@ textarea {
   text-overflow: ellipsis;
 }
 
-.content-footer__copy {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  padding: 0;
-  color: var(--muted);
-  line-height: 16px;
-  opacity: 0;
-  transition: opacity 160ms ease, color 160ms ease, background-color 160ms ease;
-}
-
-.content-footer__copy :deep(.anticon) {
-  font-size: 10px;
-}
-
 .content-footer__text {
   cursor: pointer;
 }
@@ -170,17 +154,6 @@ textarea {
 .content-footer__text:hover,
 .content-footer__text:focus-visible {
   color: var(--text);
-}
-
-.content-footer__copy:hover,
-.content-footer__copy:focus-visible {
-  color: var(--text);
-  background: var(--surface-alt);
-}
-
-.content-footer:has(.content-footer__text:hover) .content-footer__copy,
-.content-footer__copy:focus-visible {
-  opacity: 1;
 }
 
 .sidebar-toggle-btn {
@@ -246,7 +219,12 @@ textarea {
 }
 
 .menu-item:hover {
-  background: var(--sidebar-hover);
+  background: transparent;
+}
+
+.menu-item:hover .menu-icon,
+.menu-item:hover .menu-title {
+  color: var(--accent);
 }
 
 .menu-item.active {

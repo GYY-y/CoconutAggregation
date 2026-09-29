@@ -1,8 +1,16 @@
 <script setup>
 import { ref } from 'vue'
 import { DeleteOutlined, ExportOutlined, ImportOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons-vue'
+import auroraBackground from '../assets/backgrounds/aurora.svg'
+import forestBackground from '../assets/backgrounds/forest.svg'
+import sandBackground from '../assets/backgrounds/sand.svg'
 
 const defaultContentBackground = '#fcfcfc'
+const recommendedBackgrounds = [
+  { id: 'aurora', label: '极光夜色', src: auroraBackground },
+  { id: 'sand', label: '暖沙薄荷', src: sandBackground },
+  { id: 'forest', label: '森林湖光', src: forestBackground },
+]
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -45,15 +53,22 @@ const handleBackgroundUpload = (event) => {
   event.target.value = ''
 }
 
-const clearBackground = () => {
-  props.settings.backgroundImage = ''
+const clearCustomBackground = () => {
+  const selected = props.settings.backgroundImage
   props.settings.backgroundImages = []
-  props.settings.backgroundMode = 'color'
+  if (selected && !recommendedBackgrounds.some((item) => item.src === selected)) {
+    props.settings.backgroundImage = ''
+    props.settings.backgroundMode = 'color'
+  }
 }
 
 const selectBackground = (image) => {
   props.settings.backgroundImage = image
   props.settings.backgroundMode = 'image'
+}
+
+const selectRecommendedBackground = (image) => {
+  selectBackground(image)
 }
 
 const removeBackgroundImage = (image) => {
@@ -136,18 +151,42 @@ const resetContentBackground = () => {
             </div>
           </a-tab-pane>
           <a-tab-pane key="image" tab="页面背景图">
+            <div class="background-section">
+              <div class="background-section__header">
+                <div>
+                  <strong>推荐背景</strong>
+                  <span>选择一张内置背景，立即应用</span>
+                </div>
+              </div>
+              <div class="background-gallery background-gallery--recommended" aria-label="推荐背景">
+                <div
+                  v-for="background in recommendedBackgrounds"
+                  :key="background.id"
+                  class="background-thumb"
+                  :class="{ 'background-thumb--active': background.src === settings.backgroundImage }"
+                >
+                  <button class="background-thumb__select" type="button" :aria-label="`使用${background.label}`" @click="selectRecommendedBackground(background.src)">
+                    <img :src="background.src" :alt="background.label" />
+                    <span class="background-thumb__name">{{ background.label }}</span>
+                    <span v-if="background.src === settings.backgroundImage" class="background-thumb__badge">使用中</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="background-section background-section--custom">
+              <div class="background-section__header">
+                <div>
+                  <strong>自定义背景</strong>
+                  <span>上传并管理你自己的背景图片</span>
+                </div>
+              </div>
             <div class="background-setting">
               <input ref="backgroundInput" class="background-file-input" type="file" accept="image/*" aria-label="上传页面背景图" @change="handleBackgroundUpload" />
               <a-button size="middle" @click="triggerBackgroundUpload"><UploadOutlined />上传一张图片</a-button>
-              <a-button v-if="settings.backgroundImages?.length" size="middle" @click="clearBackground"><DeleteOutlined />清空图片</a-button>
+              <a-button v-if="settings.backgroundImages?.length" size="middle" @click="clearCustomBackground"><DeleteOutlined />清空图片</a-button>
               <span v-else class="background-setting__hint">可上传多张，每次上传一张</span>
             </div>
-            <div v-if="settings.backgroundImage" class="slider-setting">
-              <span class="slider-setting__label">模糊度</span>
-              <a-slider v-model:value="settings.backgroundBlur" :min="0" :max="20" :step="1" />
-              <span>{{ settings.backgroundBlur }}</span>
-            </div>
-            <div v-if="settings.backgroundImages?.length" class="background-gallery" aria-label="已上传的页面背景图">
+            <div v-if="settings.backgroundImages?.length" class="background-gallery background-gallery--custom" aria-label="已上传的页面背景图">
               <div
                 v-for="(image, index) in settings.backgroundImages"
                 :key="`${image.slice(-24)}-${index}`"
@@ -160,6 +199,12 @@ const resetContentBackground = () => {
                 </button>
                 <button class="background-thumb__remove" type="button" :aria-label="`删除第 ${index + 1} 张背景图`" @click="removeBackgroundImage(image)">×</button>
               </div>
+            </div>
+            </div>
+            <div v-if="settings.backgroundImage" class="slider-setting">
+              <span class="slider-setting__label">模糊度</span>
+              <a-slider v-model:value="settings.backgroundBlur" :min="0" :max="20" :step="1" />
+              <span>{{ settings.backgroundBlur }}</span>
             </div>
           </a-tab-pane>
         </a-tabs>
@@ -251,6 +296,37 @@ const resetContentBackground = () => {
   font-size: 12px;
 }
 
+.background-section {
+  margin-top: 2px;
+}
+
+.background-section--custom {
+  margin-top: 22px;
+}
+
+.background-section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.background-section__header div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.background-section__header strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.background-section__header span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .background-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
@@ -260,6 +336,16 @@ const resetContentBackground = () => {
   padding: 2px;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.background-gallery--recommended {
+  max-height: none;
+  margin-top: 0;
+  overflow: visible;
+}
+
+.background-gallery--custom {
+  margin-top: 14px;
 }
 
 .background-thumb {
@@ -308,6 +394,14 @@ const resetContentBackground = () => {
   color: #fff;
   font-size: 10px;
   line-height: 1.2;
+}
+
+.background-thumb__name {
+  display: block;
+  padding: 6px 8px 7px;
+  color: var(--text);
+  font-size: 11px;
+  text-align: left;
 }
 
 .background-thumb__remove {

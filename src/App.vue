@@ -5,7 +5,6 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  CopyOutlined,
   SettingOutlined,
   AppstoreOutlined,
   StarOutlined,
@@ -93,7 +92,7 @@ const seedSettings = {
   backgroundMode: 'color',
   backgroundImage: '',
   backgroundImages: [],
-  backgroundBlur: 6,
+  backgroundBlur: 2,
 }
 
 const baseLight = {
@@ -203,6 +202,48 @@ const motivationalQuotes = [
   '人间忽晚，山河已秋',
   '愿你眼里有星辰，手中有清风',
   '愿你在每一个普通日子里，都遇见一点不普通的欢喜',
+  '清醒知趣，温柔坚定',
+  '愿你有前进一寸的勇气，也有暂停片刻的从容',
+  '把喜欢的事做久一点，答案自然会出现',
+  '愿你心中有岸，眉间有光',
+  '朝着自己的方向，慢慢走就很好',
+  '不必追赶日落，晚霞自会落在你身上',
+  '愿你忙有所值，闲有所趣',
+  '所有沉淀，终会成为温柔的力量',
+  '愿你走得坚定，也保有回望的温柔',
+  '小小的日常，也值得认真收藏',
+  '愿你把生活调成喜欢的频道',
+  '心有微澜，静待花开',
+  '愿你所行皆坦荡，所念皆如愿',
+  '今天也要好好生活，好好发光',
+  '不慌不忙，慢慢成为更好的自己',
+  '愿你心中常有春天，眼里常有欢喜',
+  '每一步都算数，每一天都有意义',
+  '愿你在琐碎生活里，拾起闪亮的片段',
+  '把日常过得有滋有味，就是最好的浪漫',
+  '愿你有拥抱自己的能力，也有拥抱世界的勇气',
+  '风会吹来新的故事，时间会给出答案',
+  '心之所向，素履以往',
+  '愿你不负热爱，不惧远方',
+  '认真生活的人，终会被生活温柔以待',
+  '愿你眼中有光，脚下有路',
+  '把每一个今天，都过成值得纪念的日子',
+  '愿你自带清风，明朗欢喜',
+  '生活有望穿秋水的等待，也有意想不到的惊喜',
+  '愿你在平凡里发现美好，在忙碌中留住从容',
+  '心中有诗意，脚下有远方',
+  '愿你不念过往，不畏将来',
+  '所有美好的发生，都值得耐心等待',
+  '愿你三餐有味，四季有景',
+  '把热爱放在心上，把坚持写进日常',
+  '愿你有被惦记的幸运，也有被理解的温柔',
+  '慢慢来，日子会给你答案',
+  '愿你抬头有星光，低头有力量',
+  '在自己的节奏里，过好每一个当下',
+  '愿你所遇皆好，所行皆顺',
+  '把心安放在当下，把希望交给明天',
+  '愿你每一次出发，都比昨天更靠近自己',
+  '清风有信，未来可期',
 ]
 const currentQuoteIndex = ref(0)
 let quoteTimer
@@ -1056,16 +1097,6 @@ function loadInitialState() {
             @keydown.enter="copyCurrentQuote"
             @keydown.space.prevent="copyCurrentQuote"
           >{{ motivationalQuotes[currentQuoteIndex] }}</span>
-          <Tooltip title="复制当前文案">
-            <Button
-              class="content-footer__copy"
-              type="text"
-              size="small"
-              :icon="h(CopyOutlined)"
-              aria-label="复制当前文案"
-              @click="copyCurrentQuote"
-            />
-          </Tooltip>
         </footer>
         </template>
         <section v-else class="about-page" aria-label="关于本站">

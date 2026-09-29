@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#102a2a"/><stop offset="1" stop-color="#132e24"/></linearGradient>
+    <radialGradient id="moss" cx="24%" cy="24%" r="60%"><stop stop-color="#86b96b" stop-opacity=".46"/><stop offset="1" stop-color="#86b96b" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lake" cx="82%" cy="70%" r="55%"><stop stop-color="#4aa9a0" stop-opacity=".46"/><stop offset="1" stop-color="#4aa9a0" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#base)"/><rect width="1600" height="900" fill="url(#moss)"/><rect width="1600" height="900" fill="url(#lake)"/>
+</svg>

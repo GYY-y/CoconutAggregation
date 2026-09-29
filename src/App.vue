@@ -611,7 +611,7 @@ function submitLink() {
       })
     }
   } else {
-    state.links.unshift({
+    state.links.push({
       id: createId(),
       title: linkForm.title.trim(),
       url: linkForm.url.trim(),
@@ -1137,7 +1137,8 @@ function loadInitialState() {
         </header>
 
         <template v-if="!isAboutPage">
-        <div class="toolbar">
+        <div class="content-main-scroll">
+          <div class="toolbar">
           <Input
             ref="searchInputRef"
             v-model:value="state.search"
@@ -1163,7 +1164,7 @@ function loadInitialState() {
           >
             {{ tag }}
           </Tag>
-        </div>
+          </div>
         </div>
 
         <a-empty
@@ -1189,6 +1190,7 @@ function loadInitialState() {
           @drop="dropLink"
           @copy-title="copyTitle"
         />
+        </div>
         <footer class="content-footer" aria-live="polite">
           <span
             class="content-footer__text"
@@ -1201,10 +1203,11 @@ function loadInitialState() {
           >{{ motivationalQuotes[currentQuoteIndex] }}</span>
         </footer>
         </template>
-        <section v-else class="about-page" aria-label="关于本站">
+        <div v-else class="content-main-scroll">
+        <section class="about-page" aria-label="关于本站">
           <p>感谢你的来访。</p>
           <p>聚合工作台是一个轻量的个人链接管理工具，用来集中整理日常使用的网站、工具和资料，让常用入口更容易找到，也更方便维护。</p>
-          <p>如果你喜欢本站，欢迎将本站添加到收藏夹（快捷键 Ctrl+D），也可以设为浏览器主页，方便下次访问。感谢你的支持。</p>
+          <p>如果你喜欢本站，欢迎将本站添加到收藏夹（快捷键 <kbd>Ctrl+D</kbd>），也可以设为浏览器主页，方便下次访问。感谢你的支持。</p>
 
           <h3>你可以用它做什么</h3>
           <p>通过菜单对链接进行分组，使用标签和关键词快速筛选内容；也可以新增、编辑、删除链接和菜单，并按照自己的习惯调整顺序。</p>
@@ -1222,6 +1225,7 @@ function loadInitialState() {
           <h3>隐私说明</h3>
           <p>本站本身不需要账号，应用数据默认保存在当前浏览器本地，不会主动上传到应用服务器。打开链接后，目标网站可能会按照其自身的隐私政策处理访问数据。</p>
         </section>
+        </div>
       </main>
 
       <LinkFormModal

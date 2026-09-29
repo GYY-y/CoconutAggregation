@@ -51,7 +51,7 @@ const getCardStyle = (link) => {
     <a-dropdown v-for="link in links" :key="link.id" :trigger="['contextmenu']">
       <a-card
         class="card card--list"
-        :class="denseClass"
+        :class="[denseClass, { 'card--no-description': !showDescription }]"
         :style="getCardStyle(link)"
         :bordered="true"
         :draggable="canDrag"
